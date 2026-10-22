@@ -49,9 +49,13 @@ jobs:
       env:
         BMC_PROTOCOL: ${{ inputs.bmc-protocol }}
         GINKGO_LABEL_FILTER: "${{ inputs.ginkgo-label-filter }}"
+        TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
       # We need a new shell to pick up the new group. That is why we do the sudo -s -u $USER ...
       # Remove the pre-installed go version. We install the exact version we need.
       run: |
+        # Make ginkgo time out before the job does, so that it still gets to
+        # collect artifacts. The margin also covers the setup before the tests.
+        export GINKGO_TIMEOUT="$((TIMEOUT_MINUTES - 15))m"
         sudo usermod -a -G libvirt $USER
         sudo rm /usr/bin/go
         sudo -s -u $USER --preserve-env bash ${{ github.workspace }}/hack/ci-e2e.sh
